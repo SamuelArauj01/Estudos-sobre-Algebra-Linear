@@ -1,0 +1,79 @@
+<!doctype html>
+
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Filtros Lineares - Trabalho AV2</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Roboto,Arial;margin:18px;background:#0f172a;color:#e6eef8}
+    .card{background:linear-gradient(180deg,#071029 0%,#0b1220 100%);padding:14px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.6);}
+    label{display:block;margin:8px 0 4px}
+    input[type=file]{color:transparent}
+    canvas{border:1px solid rgba(255,255,255,.08);display:block;margin-top:12px;max-width:100%;height:auto}
+    .controls{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+    .panel{background:rgba(255,255,255,0.03);padding:10px;border-radius:8px;min-width:240px}
+    .hidden{display:none}
+    button{cursor:pointer;padding:8px 10px;border-radius:8px;border:none}
+    .btn-primary{background:#06b6d4;color:#012}
+    .btn-ghost{background:transparent;color:#a8d0e6;border:1px solid rgba(168,208,230,.08)}
+    .small{font-size:13px;color:#9fb6cc}
+    input[type=range]{width:100%}
+    .footer{margin-top:14px;font-size:13px;color:#9fb6cc}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Filtros Lineares (AV2) — único arquivo HTML</h2>
+    <p class="small">Carregue uma imagem, escolha um filtro e ajuste os parâmetros. Código em JavaScript puro (comentado) — pronto para abrir no VSC.</p>
+
+    <label>1) Carregar imagem</label>
+    <input id="file" type="file" accept="image/*" />
+
+    <div class="controls">
+      <div class="panel">
+        <label>2) Escolha o filtro</label>
+        <select id="filterSelect">
+          <option value="none">-- nenhum --</option>
+          <option value="brightness">Brilho (multiplicador k > 0)</option>
+          <option value="grayscale">Preto e Branco (combinação linear RGB)</option>
+          <option value="darken">Escurecimento (0 &lt; k &lt; 1)</option>
+          <option value="rotate">Rotação (transformação linear das coordenadas)</option>
+        </select>
+
+        <div id="params">
+          <!-- controles dinâmicos serão inseridos por JS -->
+        </div>
+
+        <div style="margin-top:8px">
+          <button id="applyBtn" class="btn-primary">Aplicar</button>
+          <button id="resetBtn" class="btn-ghost">Resetar</button>
+        </div>
+
+        <div style="margin-top:8px">
+          <button id="downloadBtn" class="btn-primary">Baixar Resultado</button>
+        </div>
+      </div>
+
+      <div class="panel" style="flex:1;min-width:320px">
+        <label>Visualização</label>
+        <canvas id="canvas"></canvas>
+        <div class="footer">Dica: arraste a imagem para o input ou use <strong>Live Server</strong> no VSC para recarregar automaticamente.</div>
+      </div>
+    </div>
+
+    <hr style="margin:14px 0;border-color:rgba(255,255,255,.03)" />
+
+    <div class="small">
+      <strong>Relação com Álgebra Linear:</strong>
+      <ul>
+        <li>Brilho/escurecimento: cada pixel RGB é tratado como vetor v = [R,G,B]. Multiplicar por escalar k é uma transformação linear v' = k·v.</li>
+        <li>Preto e branco: é uma combinação linear dos canais: I = a·R + b·G + c·B. Isso é uma transformação linear que usa um vetor de pesos [a,b,c].</li>
+        <li>Rotação: rotacionar a posição (x,y) no plano equivale a multiplicar o vetor posição por uma matriz de rotação 2×2. Aqui usamos canvas para transformar as coordenadas (é uma transformação linear nas coordenadas espaciais).</li>
+      </ul>
+    </div>
+  </div>
+
+    <script src="app.js" defer> </script>
+</body>
+</html>
