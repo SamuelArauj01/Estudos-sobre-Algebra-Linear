@@ -118,26 +118,27 @@ filterSelect.addEventListener('change', ()=>{
 // --- 5. FUNÇÕES DE FILTRO (TRANFORMAÇÕES LINEARES) ---
 
 // --- Brilho: Multiplicar cada pixel por k (transformação linear v'= kv)
-function applyBrightness(k){
+function applyBrightness(k){        // k é o valor da multiplicação para aumentar o brilho
   if(!guardaPixImagemOriginal) return;
   const out = new ImageData(new Uint8ClampedArray(guardaPixImagemOriginal.data), guardaPixImagemOriginal.width, guardaPixImagemOriginal.height);
   const d = out.data;
 
-  for(let i=0;i<d.length;i+=4){
-    d[i] = clamp(d[i]*k);
-    d[i+1] = clamp(d[i+1]*k);
-    d[i+2] = clamp(d[i+2]*k);
+  for(let i=0;i<d.length;i+=4){     // length = 3, o 4 é a transparência, logo o i deve pular para o próximo 'conjunto de rgb'
+    d[i] = clamp(d[i]*k);           // d[0]=R
+    d[i+1] = clamp(d[i+1]*k);       // d[1]=G
+    d[i+2] = clamp(d[i+2]*k);       // d[2]=B
   }
 
 
   ctx.putImageData(out,0,0);
 }
 
+// --- ESCURECIMENTO: multiplicar cada pixel por k, porem esse k só pode ser menor do que 1, se quiser apresentar a imagem original ainda aí é só colocar o próprio 1,pq não irá alterar.
 function applyDarken(k){
   if(!guardaPixImagemOriginal) return;
   const out = new ImageData(new Uint8ClampedArray(guardaPixImagemOriginal.data), guardaPixImagemOriginal.width, guardaPixImagemOriginal.height);
   const d = out.data;
-  for(let i=0;i<d.length;i+=4){
+  for(let i=0;i<d.length;i+=4){     //Mesmo raciocínio da função do brilho
     d[i] = clamp(d[i]*k);
     d[i+1] = clamp(d[i+1]*k);
     d[i+2] = clamp(d[i+2]*k);
@@ -145,34 +146,39 @@ function applyDarken(k){
   ctx.putImageData(out,0,0);
 }
 
+// --- PRETO E BRANCO: para criar uma foto em preto e branco, cada um dos "vetores" da cor tem que ser iguais, apenas alterando a sua intensidade, ex: um vermelho (200,50,50) já um tom de cinza é (128,128,128)
 function applyGrayscale(wR,wG,wB){
   if(!guardaPixImagemOriginal) return;
   // combinação linear: I = wR*R + wG*G + wB*B
   const out = new ImageData(new Uint8ClampedArray(guardaPixImagemOriginal.data), guardaPixImagemOriginal.width, guardaPixImagemOriginal.height);
   const d = out.data;
   for(let i=0;i<d.length;i+=4){
-    const R = d[i], G = d[i+1], B = d[i+2];
-    const I = wR*R + wG*G + wB*B; // combinação linear
+    const R = d[i], G = d[i+1], B = d[i+2];  // existe uma variavel definindo cada letra, "RGB"
+    const I = wR*R + wG*G + wB*B; // combinação linear com os pesos diferentes, para alterar a intensidade do pixel
     const v = clamp(I);
-    d[i]=d[i+1]=d[i+2]=v;
+    d[i]=d[i+1]=d[i+2]=v; // deixa todos os canais iguais
   }
   ctx.putImageData(out,0,0);
 }
 
+// --- ROTAÇÃO DA IMAGEM
 function applyRotation(deg){
   if(!imagemOriginal) return;
   // para rotacionar sem cortar, criamos canvas temporário com tamanho que cabe a imagem rotacionada
-  const rad = deg * Math.PI/180;
+
+  const rad = deg * Math.PI/180;    //convertendo graus para radianos
   const w = imagemOriginal.width, h = imagemOriginal.height;
-  // novo tamanho bbox após rotação
+  
+  // novo tamanho do bloco do canvas para não cortar a imagem já aplicando a matriz de rotação 2x2
   const cos = Math.abs(Math.cos(rad)), sin = Math.abs(Math.sin(rad));
-  const newW = Math.ceil(w * cos + h * sin);
-  const newH = Math.ceil(w * sin + h * cos);
+  const newW = Math.ceil(w * cos + h * sin);    //R(0)|cos0 -sin0|
+  const newH = Math.ceil(w * sin + h * cos);    //    |sin0  cos0|
 
   const off = document.createElement('canvas');
   off.width = newW; off.height = newH;
   const oc = off.getContext('2d');
-  // centro, rotaciona e desenha
+
+  // muda o centro de referencia para o meio da imagem
   oc.translate(newW/2, newH/2);
   oc.rotate(rad);
   oc.drawImage(imagemOriginal, -w/2, -h/2);
@@ -184,13 +190,19 @@ function applyRotation(deg){
 }
 
 // função auxiliar para manter o limite de cada cor entre 0 e 255, que são os valores permitidos para o RGB
+//Quando multiplicamos um pixel por k, às vezes dá valores fora do intervalo válido (ex: 270, -5).
+//O clamp() serve para “travar” o valor dentro dos limites permitidos.
+
 function clamp(v){ 
     return Math.max(0, Math.min(255, Math.round(v)));
 }
 
-// ===== Ações dos botões =====
+// --- 6. BOTÕES (APLICAR, RESETAR, BAIXAR) ---
+
+// Quando clicar em "Aplicar", ele checa todas as possibilidades, se a pessoa não colocou a foto, se ela só selecionou o filtro, e em seguida manda aplicar cada filtro dependendo da escolha da pessoa
 applyBtn.addEventListener('click', ()=>{
   const v = filterSelect.value;
+
   if(!guardaPixImagemOriginal && v !== 'rotate'){
     alert('Carregue uma imagem primeiro.');
     return;
@@ -214,6 +226,7 @@ applyBtn.addEventListener('click', ()=>{
   }
 });
 
+// Botão de "Resetar" salva o canvas com a imagem original que foi feito o upload
 resetBtn.addEventListener('click', ()=>{
   if(!imagemOriginal) return;
   carregaImgParaCanvas(imagemOriginal);
@@ -222,10 +235,9 @@ resetBtn.addEventListener('click', ()=>{
 downloadBtn.addEventListener('click', ()=>{
   const link = document.createElement('a');
   link.download = 'resultado.png';
-  link.href = canvas.toDataURL('image/png');
-  link.click();
+  link.href = canvas.toDataURL('image/png'); // converte o canvas em imagem
+  link.click(); // faz o download da imagem
 });
 
-// ===== Inicialização simples: cria um filtro vazio =====
+// inicia tudo com um filtro "transparente" ou sem filtro no caso
 filterSelect.dispatchEvent(new Event('change'));
-
