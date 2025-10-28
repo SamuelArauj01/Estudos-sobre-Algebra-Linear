@@ -241,3 +241,8 @@ downloadBtn.addEventListener('click', ()=>{
 
 // inicia tudo com um filtro "transparente" ou sem filtro no caso
 filterSelect.dispatchEvent(new Event('change'));
+
+// Grupo
+// Samuel de Souza Araújo - 2510348
+// Henrique Pires Coteletti - 2510324
+// Leonardo Pires Coteletti - 2510302 
